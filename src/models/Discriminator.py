@@ -97,15 +97,15 @@ def weights_init(m):
         nn.init.constant_(m.bias.data, 0)
 
 
-class minibatch_std(nn.Module):
-    def __init__(self):
-        super().__init__()
+# class minibatch_std(nn.Module):
+#     def __init__(self):
+#         super().__init__()
 
-    def forward(self, x):
-        batch_statistics = (
-            torch.std(x, dim=0).mean().repeat(x.shape[0], 1, x.shape[2], x.shape[3])
-        )
-        return torch.cat([x, batch_statistics], dim=1)
+#     def forward(self, x):
+#         batch_statistics = (
+#             torch.std(x, dim=0).mean().repeat(x.shape[0], 1, x.shape[2], x.shape[3])
+#         )
+#         return torch.cat([x, batch_statistics], dim=1)
 
 
 class NLayerDiscriminator(nn.Module):
@@ -153,8 +153,11 @@ class NLayerDiscriminator(nn.Module):
             nn.LeakyReLU(0.2, True)
         ]
 
-        sequence += [minibatch_std(),
-                     nn.Conv2d(ndf * nf_mult + 1, 1, kernel_size=kw, stride=1,
+        # sequence += [minibatch_std(),
+        #              nn.Conv2d(ndf * nf_mult + 1, 1, kernel_size=kw, stride=1,
+        #                        padding=padw)]  # output 1 channel prediction map
+        # Thanks to Megamusz for discovering this bug. Setting minibatch_std may result in NaN.
+        sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, stride=1,
                                padding=padw)]  # output 1 channel prediction map
         self.main = nn.Sequential(*sequence)
         self.apply(weights_init)
